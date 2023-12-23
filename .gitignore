@@ -1,0 +1,6 @@
+*vcxproj*
+/build
+/x64
+/x86
+/include/
+/lib/
