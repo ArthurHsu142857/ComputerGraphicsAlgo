@@ -18,18 +18,21 @@ static const GLsizei WINDOW_HEIGHT = 1200;
 
 class Application {
 public:
-	Application();
-	~Application();
+	void Initialize() {
+		SetupGL();
+		SetupResource();
+	}
 
-	virtual void Initialize();
-	virtual void Run();
-	virtual void Destroy();
+	void Destroy() {
+		FreeResource();
+	}
+
+	virtual void Run() = 0;
 
 protected:
-	virtual void SetupGL();
-	virtual void ProcessInput(float deltaTime);
-	virtual void SetupResource();
-	virtual void FreeResource();
-
-	virtual void Render();	
+	virtual void SetupGL() = 0;
+	virtual void ProcessKeyboardInput(float deltaTime) = 0;
+	virtual void SetupResource() = 0;
+	virtual void FreeResource() = 0;
+	virtual void Render() = 0;	
 };

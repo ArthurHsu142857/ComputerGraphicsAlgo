@@ -6,6 +6,9 @@ bool gFirstMouseInput = true;
 double gLastX = WINDOW_WIDTH / 2;
 double gLastY = WINDOW_HEIGHT / 2;
 
+static GLFWwindow* gpWindow;
+static Camera* gpMainCamera;
+
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 
@@ -17,20 +20,8 @@ ReflectiveShadowMap::ReflectiveShadowMap(const char* objPath) {
 ReflectiveShadowMap::~ReflectiveShadowMap() {
 }
 
-void ReflectiveShadowMap::Initialize() {
-	SetupGL();
-
-	SetupResource();
-}
-
 void ReflectiveShadowMap::Run() {
 	Render();
-}
-
-void ReflectiveShadowMap::Destroy() {
-	FreeResource();
-
-	glfwTerminate();
 }
 
 void ReflectiveShadowMap::SetupGL() {
@@ -57,7 +48,7 @@ void ReflectiveShadowMap::SetupGL() {
 	}
 }
 
-void ReflectiveShadowMap::ProcessInput(float deltaTime) {
+void ReflectiveShadowMap::ProcessKeyboardInput(float deltaTime) {
 	if (glfwGetKey(gpWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(gpWindow, true);
 
@@ -79,7 +70,7 @@ void ReflectiveShadowMap::SetupResource() {
 
 void ReflectiveShadowMap::FreeResource() {
 	glDeleteProgram(mpShader->ID);
-	
+
 	mpShader.release();
 	mpModel.release();
 }
@@ -93,7 +84,7 @@ void ReflectiveShadowMap::Render() {
 		deltaTime = currentFrameTime - lastFrameTime;
 		lastFrameTime = currentFrameTime;
 
-		ProcessInput(deltaTime);
+		ProcessKeyboardInput(deltaTime);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
