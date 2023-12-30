@@ -11,4 +11,6 @@ Use [vcpkg](https://github.com/microsoft/vcpkg) to get we need.
 > vcpkg install glm:x64-windows
 > vcpkg install stb
 ```
+## Note
 Replace your vcpkg path in CMakeLists.txt
+Remember to add vcpkg ./bin to your environment variable
