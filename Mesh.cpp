@@ -36,7 +36,7 @@ void Mesh::Draw(Shader* shader) {
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
-    if (glm::length(color.ambient) == 0) {
+    if (glm::length(color.ambient) == 0 && glm::length(color.diffuse) == 0 && glm::length(color.specular) == 0) {
         shader->setVec3("mat.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
         shader->setVec3("mat.diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
         shader->setVec3("mat.specular", glm::vec3(0.0f, 0.0f, 0.0f));
