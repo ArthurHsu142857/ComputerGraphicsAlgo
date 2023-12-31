@@ -7,6 +7,13 @@
 
 
 class ReflectiveShadowMap : public Application {
+	// Todo : light style class ...
+	struct Light {
+		Light(glm::vec3 p, glm::vec3 c) : position(p), color(c) {};
+		glm::vec3 position;
+		glm::vec3 color;
+	};
+
 public:
 	ReflectiveShadowMap(const char* objPath);
 	~ReflectiveShadowMap();
@@ -23,6 +30,7 @@ private:
 private:
 	std::unique_ptr<Shader> mpShader;
 	std::unique_ptr<Model> mpModel;
+	std::unique_ptr<Light> mpLight;
 
 	const char* mpFilePath;
 

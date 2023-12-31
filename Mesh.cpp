@@ -1,14 +1,15 @@
 #include "Mesh.h"
 
-Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures) {
+Mesh::Mesh(vector<Vertex> vertices, Color color, vector<unsigned int> indices, vector<Texture> textures) {
     this->vertices = vertices;
+    this->color = color;
     this->indices = indices;
     this->textures = textures;
 
     SetupMesh();
 }
 
-void Mesh::Draw(GLuint programID) {
+void Mesh::Draw(Shader* shader) {
     unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
     unsigned int normalNr = 1;
@@ -29,9 +30,21 @@ void Mesh::Draw(GLuint programID) {
             number = std::to_string(heightNr++); // transfer unsigned int to string
 
         // now set the sampler to the correct texture unit
-        glUniform1i(glGetUniformLocation(programID, (name + number).c_str()), i);
+        shader->setInt((name + number).c_str(), i);
+
         // and finally bind the texture
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
+    }
+
+    if (glm::length(color.ambient) == 0) {
+        shader->setVec3("mat.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
+        shader->setVec3("mat.diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
+        shader->setVec3("mat.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+    }
+    else {
+        shader->setVec3("mat.ambient", color.ambient);
+        shader->setVec3("mat.diffuse", color.diffuse);
+        shader->setVec3("mat.specular", color.specular);
     }
 
     // draw mesh

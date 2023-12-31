@@ -12,9 +12,9 @@ Model::Model(const char* path) {
 	LoadModel(path);
 }
 
-void Model::Draw(GLuint programID) {
+void Model::Draw(Shader* shader) {
     for (int i = 0; i < mMeshes.size(); i++) {
-        mMeshes[i].Draw(programID);
+        mMeshes[i].Draw(shader);
     }
 }
 
@@ -50,7 +50,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene) {
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
 
-    std::cout << "Get " << mesh->mName.C_Str() << " mesh" << std::endl;
+    std::cout << "Get " << mesh->mName.C_Str() << " mesh with " << mesh->mNumVertices << " vertices" << std::endl;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -84,31 +84,35 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene) {
     }
 
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-    
+
+    Color color = LoadMaterialColors(material);
+
     std::vector<Texture> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-    std::cout << "Diffuse maps : " << diffuseMaps.size() << std::endl;
+    std::cout << "\tDiffuse maps : " << diffuseMaps.size() << std::endl;
     
     std::vector<Texture> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
-    std::cout << "Specular maps : " << specularMaps.size() << std::endl;
+    std::cout << "\tSpecular maps : " << specularMaps.size() << std::endl;
 
     std::vector<Texture> normalMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
-    std::cout << "Normal maps : " << normalMaps.size() << std::endl;
+    std::cout << "\tNormal maps : " << normalMaps.size() << std::endl;
 
     std::vector<Texture> heightMaps = LoadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-    std::cout << "Height maps : " << heightMaps.size() << std::endl;
+    std::cout << "\tHeight maps : " << heightMaps.size() << std::endl;
 
     std::cout << "Done mesh process" << std::endl << std::endl;
 
-    return Mesh(vertices, indices, textures);
+    return Mesh(vertices, color, indices, textures);
 }
+
+
 
 vector<Texture> Model::LoadMaterialTextures(aiMaterial* material, aiTextureType type, string typeName) {
     std::vector<Texture> textures;
@@ -167,4 +171,30 @@ unsigned int Model::TextureFromFile(const char* path, const std::string &directo
     }
 
     return textureID;
+}
+
+Color Model::LoadMaterialColors(aiMaterial* mat) {
+    Color returnColor;
+    aiString matName;
+    aiColor3D matColor;
+
+    mat->Get(AI_MATKEY_NAME, matName);
+    std::cout << "Material name : " << matName.C_Str() << std::endl;
+
+    std::cout << "\tcolor :" << std::endl;
+    mat->Get(AI_MATKEY_COLOR_AMBIENT, matColor);
+    returnColor.ambient = glm::vec3(matColor.r, matColor.g, matColor.b);
+    Utility::PrintVector("\t    ambient ", glm::vec3(matColor.r, matColor.g, matColor.b));
+
+    mat->Get(AI_MATKEY_COLOR_DIFFUSE, matColor);
+    returnColor.diffuse = glm::vec3(matColor.r, matColor.g, matColor.b);
+    Utility::PrintVector("\t    diffuse ", glm::vec3(matColor.r, matColor.g, matColor.b));
+
+    mat->Get(AI_MATKEY_COLOR_SPECULAR, matColor);
+    returnColor.specular = glm::vec3(matColor.r, matColor.g, matColor.b);
+    Utility::PrintVector("\t    specular ", glm::vec3(matColor.r, matColor.g, matColor.b));
+
+    std::cout << std::endl;
+    
+    return returnColor;
 }

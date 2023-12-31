@@ -64,8 +64,13 @@ void ReflectiveShadowMap::ProcessKeyboardInput(float deltaTime) {
 
 void ReflectiveShadowMap::SetupResource() {
 	gpMainCamera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+
 	mpModel = std::make_unique<Model>(mpFilePath);
 	mpShader = std::make_unique<Shader>("../shader/RSM.vs", "../shader/RSM.fs");
+	mpLight = std::make_unique<Light>(
+		glm::vec3(0.0f, 3.0f, 3.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f)
+	);
 }
 
 void ReflectiveShadowMap::FreeResource() {
@@ -76,6 +81,9 @@ void ReflectiveShadowMap::FreeResource() {
 }
 
 void ReflectiveShadowMap::Render() {
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+
 	float deltaTime = 0.0f;
 	float lastFrameTime = 0.0f;
 
@@ -87,21 +95,26 @@ void ReflectiveShadowMap::Render() {
 		ProcessKeyboardInput(deltaTime);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		mpShader->use();
 
+		// Set matrix
 		glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = gpMainCamera->GetViewMatrix();
 		mpShader->setMat4("projection", projection);
 		mpShader->setMat4("view", view);
 
+		// Set light position
+		mpShader->setVec3("light.position", mpLight->position);
+		mpShader->setVec3("light.color", mpLight->color);
+
 		// render the loaded model
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// it's a bit too big for our scene, so scale it down
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -15.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
 		mpShader->setMat4("model", model);
-		mpModel->Draw(mpShader->ID);
+		mpModel->Draw(mpShader.get());
 
 		glfwSwapBuffers(gpWindow);
 		glfwPollEvents();

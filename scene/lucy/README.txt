@@ -1,0 +1,1 @@
+Stanford's Lucy by julienM on Thingiverse: https://www.thingiverse.com/thing:41939
