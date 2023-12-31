@@ -60,6 +60,10 @@ void ReflectiveShadowMap::ProcessKeyboardInput(float deltaTime) {
 		gpMainCamera->ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(gpWindow, GLFW_KEY_D) == GLFW_PRESS)
 		gpMainCamera->ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(gpWindow, GLFW_KEY_Q) == GLFW_PRESS)
+		gpMainCamera->ProcessKeyboard(UP, deltaTime);
+	if (glfwGetKey(gpWindow, GLFW_KEY_E) == GLFW_PRESS)
+		gpMainCamera->ProcessKeyboard(DOWN, deltaTime);
 }
 
 void ReflectiveShadowMap::SetupResource() {
