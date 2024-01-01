@@ -9,7 +9,7 @@
 class ReflectiveShadowMap : public Application {
 	// Todo : light style class ...
 	struct Light {
-		Light(glm::vec3 p, glm::vec3 c) : position(p), color(c) {};
+		Light(glm::vec3 position, glm::vec3 color) : position(position), color(color) {};
 		glm::vec3 position;
 		glm::vec3 color;
 	};
@@ -18,21 +18,43 @@ public:
 	ReflectiveShadowMap(const char* objPath);
 	~ReflectiveShadowMap();
 
-	void Run() override;
-	void Render() override;
-
 private:
 	void SetupGL() override;
 	void ProcessKeyboardInput(float deltaTime) override;
 	void SetupResource() override;
 	void FreeResource() override;
+	void CreateRenderBuffers();
+	void RenderLoop() override;
+	void RenderCameraView();
+	void RenderQuad();
 
 private:
-	std::unique_ptr<Shader> mpShader;
-	std::unique_ptr<Model> mpModel;
-	std::unique_ptr<Light> mpLight;
+	// Shaders
+	std::unique_ptr<Shader> mpLightShader;
+	std::unique_ptr<Shader> mpQuadShader;
 
+	// Render information
+	std::unique_ptr<Model> mpModel;
+	std::unique_ptr<Model> mpQuad;
+	std::unique_ptr<Light> mpLight;
 	const char* mpFilePath;
+
+	// Buffers
+	GLuint mReflectiveShadowMapFBO;
+	GLuint mDepthMapTexture;
+	GLuint mWorldPoseTexture;
+	GLuint mNormalMapTexture;
+	GLuint mFluxMapTexture;
+
+	glm::vec3 mMainCameraPosition = glm::vec3(0.0f, 0.2f, 0.0f);
+	glm::vec3 mLucyPosition = glm::vec3(0.0f, 0.0f, -3.5f);
+	glm::vec3 mLucyScale = glm::vec3(0.02f, 0.02f, 0.02f);
+	// Todo : light style class
+	glm::vec3 mLightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
+
+	// Debug
+	int mDebugSwitcher = 0;
+	GLuint mDebugColorTexture;
 
 
 };

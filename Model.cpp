@@ -4,12 +4,19 @@
 
 #include <iostream>
 
-Model::Model() {
+Model::Model(ModelType type, const char* path) {
+    switch (type) {
+        case LOAD_MODEL:
+            BuildModel(path);
+            break;
 
-}
+        case FULL_SCREEN_QUAD:
+            BuildQuad();
+            break;
 
-Model::Model(const char* path) {
-	LoadModel(path);
+        default:
+            break;
+    }
 }
 
 void Model::Draw(Shader* shader) {
@@ -18,7 +25,7 @@ void Model::Draw(Shader* shader) {
     }
 }
 
-void Model::LoadModel(const std::string path) {
+void Model::BuildModel(const std::string path) {
     std::cout << "Load model from path : " << path << std::endl << std::endl;
 
 	Assimp::Importer importer;
@@ -32,6 +39,10 @@ void Model::LoadModel(const std::string path) {
     mDirectory = path.substr(0, path.find_last_of('/'));
 
     ProcessNode(scene->mRootNode, scene);
+}
+
+void Model::BuildQuad() {
+    mMeshes.emplace_back(ProcessQuadMesh());
 }
 
 void Model::ProcessNode(aiNode* node, const aiScene* scene) {
@@ -62,15 +73,15 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene) {
             vertex.texCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
         }
         else {
-            vertex.texCoords = glm::vec2(0.0f, 0.0f);
+            vertex.texCoords = glm::vec2(0.0f);
         }
         if (mesh->HasTangentsAndBitangents()) {
             vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
             vertex.bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
         }
         else {
-            vertex.texCoords = glm::vec3(0.0f, 0.0f, 0.0f);
-            vertex.texCoords = glm::vec3(0.0f, 0.0f, 0.0f);
+            vertex.texCoords = glm::vec2(0.0f);
+            vertex.texCoords = glm::vec2(0.0f);
         }
 
         vertices.emplace_back(vertex);
@@ -197,4 +208,34 @@ Color Model::LoadMaterialColors(aiMaterial* mat) {
     std::cout << std::endl;
     
     return returnColor;
+}
+
+Mesh Model::ProcessQuadMesh() {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    std::vector<Texture> textures;
+    Color color;
+
+    for (unsigned int i = 0; i < sizeof(smQuadVertices) / sizeof(float); i += 4) {
+        Vertex vertex;
+        vertex.position = glm::vec3(smQuadVertices[i], smQuadVertices[i+1], 0.0f);
+        vertex.texCoords = glm::vec2(smQuadVertices[i+2], smQuadVertices[i+3]);
+        vertex.normal = glm::vec3(0.0f, 0.0f, -1.0f);
+        vertex.tangent = glm::vec3(0.0f);
+        vertex.bitangent = glm::vec3(0.0f);
+
+        vertices.emplace_back(vertex);
+    }
+
+    for (unsigned int i = 0; i < sizeof(smQuadIndices) / sizeof(unsigned int); i++) {
+        indices.emplace_back(smQuadIndices[i]);
+    }
+
+    textures.resize(0);
+
+    color.ambient = glm::vec3(0.0f);
+    color.diffuse = glm::vec3(0.0f);
+    color.specular = glm::vec3(0.0f);
+
+    return Mesh(vertices, color, indices, textures);
 }

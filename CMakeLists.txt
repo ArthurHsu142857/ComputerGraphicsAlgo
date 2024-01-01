@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.0)
-cmake_policy(VERSION 3.0...3.18.4)
 
 set(NAME ComputerGraphicsAlgo)
 set(VCPKG_PATH "C:/src/vcpkg/installed/x64-windows")

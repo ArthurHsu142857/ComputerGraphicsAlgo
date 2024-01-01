@@ -26,12 +26,14 @@ public:
 		FreeResource();
 	}
 
-	virtual void Run() = 0;
+	void Run() {
+		RenderLoop();
+	};
 
 protected:
 	virtual void SetupGL() = 0;
 	virtual void ProcessKeyboardInput(float deltaTime) = 0;
 	virtual void SetupResource() = 0;
 	virtual void FreeResource() = 0;
-	virtual void Render() = 0;	
+	virtual void RenderLoop() = 0;
 };

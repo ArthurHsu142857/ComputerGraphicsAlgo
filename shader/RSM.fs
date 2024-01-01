@@ -1,5 +1,9 @@
 #version 460 core
-out vec4 FragColor;
+
+layout (location = 0) out vec3 outWorldPose;
+layout (location = 1) out vec3 outNormal;
+layout (location = 2) out vec3 outFlux;
+layout (location = 3) out vec3 outColor;
 
 struct Light {
     vec3 position;
@@ -28,5 +32,8 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = light.color * (diff * mat.diffuse);
 
-    FragColor = vec4(diffuse, 1.0f);
+    outWorldPose = FragPos;
+    outNormal = norm;
+    outFlux = vec3(1.0f, 1.0f, 1.0f);
+    outColor = diffuse;
 }
