@@ -22,6 +22,7 @@ public:
 	Model(ModelType type, const char* path = nullptr);
 
 	void Draw(Shader* shader);
+	void AddLightTexture(string name, GLuint textureID);
 
 private:
 	static constexpr float smQuadVertices[] = {

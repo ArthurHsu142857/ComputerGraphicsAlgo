@@ -25,6 +25,12 @@ void Model::Draw(Shader* shader) {
     }
 }
 
+void Model::AddLightTexture(string name, GLuint textureID) {
+    for (int i = 0; i < mMeshes.size(); i++) {
+        mMeshes[i].AddLightTexture(name, textureID);
+    }
+}
+
 void Model::BuildModel(const std::string path) {
     std::cout << "Load model from path : " << path << std::endl << std::endl;
 

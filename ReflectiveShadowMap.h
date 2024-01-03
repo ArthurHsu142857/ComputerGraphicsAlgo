@@ -25,6 +25,7 @@ private:
 	void FreeResource() override;
 	void CreateRenderBuffers();
 	void RenderLoop() override;
+	void RenderLightView();
 	void RenderCameraView();
 	void RenderQuad();
 
@@ -32,6 +33,7 @@ private:
 	// Shaders
 	std::unique_ptr<Shader> mpLightShader;
 	std::unique_ptr<Shader> mpQuadShader;
+	std::unique_ptr<Shader> mpCombineShader;
 
 	// Render information
 	std::unique_ptr<Model> mpModel;

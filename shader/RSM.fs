@@ -16,24 +16,27 @@ struct Material {
     vec3 specular;
 };
 
-in vec3 FragPos;
-in vec2 TexCoords;
-in vec3 Normal;
+in VS_OUT {
+    vec3 fragPos;
+    vec2 texCoords;
+    vec3 normal;
+} vs_out;
 
 uniform sampler2D texture_diffuse1;
 uniform Light light;
-uniform Material mat;
+uniform Material material;
 
 
 void main()
 {
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(light.position - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.color * (diff * mat.diffuse);
+    vec3 normal = normalize(vs_out.normal);
+    vec3 lightDir = normalize(light.position - vs_out.fragPos);
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = light.color * (diff * material.diffuse);
 
-    outWorldPose = FragPos;
-    outNormal = norm;
-    outFlux = vec3(1.0f, 1.0f, 1.0f);
+    outWorldPose = vs_out.fragPos;
+    outNormal = normal;
+    // Point light has cosine weight decrease, parallel light don't
+    outFlux = vec3(max(dot(normal, lightDir), 0.0f)); // * material flux
     outColor = diffuse;
 }

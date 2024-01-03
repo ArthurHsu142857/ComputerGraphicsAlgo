@@ -2,7 +2,9 @@
 
 out vec4 FragColor;
 
-in vec2 TexCoords;
+in VS_OUT {
+    vec2 texCoords;
+} vs_out;
 
 uniform sampler2D worldPoseTexture;
 uniform sampler2D normalMapTexture;
@@ -15,18 +17,18 @@ uniform int debugSwitchTexture;
 void main()
 {
     if (debugSwitchTexture == 1) {
-        FragColor = texture(worldPoseTexture, TexCoords);
+        FragColor = texture(worldPoseTexture, vs_out.texCoords);
     }
     else if (debugSwitchTexture == 2) {
-        FragColor = texture(normalMapTexture, TexCoords);
+        FragColor = texture(normalMapTexture, vs_out.texCoords);
     }
     else if (debugSwitchTexture == 3) {
-        FragColor = texture(fluxMapTexture, TexCoords);
+        FragColor = texture(fluxMapTexture, vs_out.texCoords);
     }
     else if (debugSwitchTexture == 4) {
-        FragColor = vec4(vec3(1.0f - texture(depthMapTexture, TexCoords).r), 1.0f);
+        FragColor = vec4(vec3(1.0f - texture(depthMapTexture, vs_out.texCoords).r), 1.0f);
     }
     else {
-        FragColor = texture(debugColorTexture, TexCoords);
+        FragColor = texture(debugColorTexture, vs_out.texCoords);
     }
 }

@@ -81,6 +81,7 @@ void ReflectiveShadowMap::SetupResource() {
 	mpQuad = std::make_unique<Model>(Model::FULL_SCREEN_QUAD);
 	mpLightShader = std::make_unique<Shader>("../shader/RSM.vs", "../shader/RSM.fs");
 	mpQuadShader = std::make_unique<Shader>("../shader/FullScreenQuad.vs", "../shader/FullScreenQuad.fs");
+	mpCombineShader = std::make_unique<Shader>("../shader/Combine.vs", "../shader/Combine.fs");
 	mpLight = std::make_unique<Light>(
 		mLightPosition,
 		glm::vec3(1.0f, 1.0f, 1.0f)
@@ -173,6 +174,9 @@ void ReflectiveShadowMap::RenderLoop() {
 		ProcessKeyboardInput(deltaTime);
 
 		// Get light position view information
+		RenderLightView();
+
+		// CombinePass
 		RenderCameraView();
 
 		// Present light information
@@ -185,7 +189,9 @@ void ReflectiveShadowMap::RenderLoop() {
 	glfwTerminate();
 }
 
-void ReflectiveShadowMap::RenderCameraView() {
+void ReflectiveShadowMap::RenderLightView() {
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
 	// Render to texture
 	glBindFramebuffer(GL_FRAMEBUFFER, mReflectiveShadowMapFBO);
 
@@ -199,12 +205,12 @@ void ReflectiveShadowMap::RenderCameraView() {
 	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 	glm::vec3 viewDir = mLucyPosition - mLightPosition;
 	glm::mat4 view = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
-	mpLightShader->setMat4("projection", projection);
-	mpLightShader->setMat4("view", view);
+	mpLightShader->setMat4("projectionMat", projection);
+	mpLightShader->setMat4("viewMat", view);
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, mLucyPosition);
 	model = glm::scale(model, mLucyScale);
-	mpLightShader->setMat4("model", model);
+	mpLightShader->setMat4("modelMat", model);
 
 	// Set light information
 	mpLightShader->setVec3("light.position", mpLight->position);
@@ -213,10 +219,50 @@ void ReflectiveShadowMap::RenderCameraView() {
 	// Render
 	mpModel->Draw(mpLightShader.get());
 
+	glActiveTexture(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Add light information texture to model
+	mpModel->AddLightTexture("worldPoseTexture", mWorldPoseTexture);
+	mpModel->AddLightTexture("normalMapTexture", mNormalMapTexture);
+	mpModel->AddLightTexture("fluxMapTexture", mFluxMapTexture);
+	mpModel->AddLightTexture("depthMapTexture", mDepthMapTexture);
+}
+
+void ReflectiveShadowMap::RenderCameraView() {
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glEnable(GL_DEPTH_TEST);
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	mpCombineShader->use();
+
+	// Set transform matrix
+	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 view = gpMainCamera->GetViewMatrix();
+	mpCombineShader->setMat4("projectionMat", projection);
+	mpCombineShader->setMat4("viewMat", view);
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, mLucyPosition);
+	model = glm::scale(model, mLucyScale);
+	mpCombineShader->setMat4("modelMat", model);
+	mpCombineShader->setMat4("lightSpaceMat", projection * view);
+
+	// Set light information
+	mpCombineShader->setVec3("light.position", mpLight->position);
+	mpCombineShader->setVec3("light.color", mpLight->color);
+
+	// Render
+	mpModel->Draw(mpCombineShader.get());
 }
 
 void ReflectiveShadowMap::RenderQuad() {
+	glViewport(0, 0, 400, 300);
+
 	// Render gbuffer texture
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
@@ -245,6 +291,9 @@ void ReflectiveShadowMap::RenderQuad() {
 	mpQuadShader->setInt("debugSwitchTexture", mDebugSwitcher);
 
 	mpQuad->Draw(mpQuadShader.get());
+
+	glActiveTexture(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {

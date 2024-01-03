@@ -42,11 +42,13 @@ class Mesh {
 public:
     Mesh(vector<Vertex> vertices, Color materials, vector<unsigned int> indices, vector<Texture> textures);
     void Draw(Shader* shader);
+    void AddLightTexture(string textureName, GLuint textureID);
 
     vector<Vertex>       vertices;
     Color                color;
     vector<unsigned int> indices;
     vector<Texture>      textures;
+    vector<Texture>      lightTextures;
 
     unsigned int VAO;
 

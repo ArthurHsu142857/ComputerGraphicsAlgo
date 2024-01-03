@@ -36,15 +36,31 @@ void Mesh::Draw(Shader* shader) {
         glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
+    // Active light textures
+    if (!lightTextures.empty()) {
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, lightTextures[0].id);
+        shader->setInt(lightTextures[0].type.c_str(), 4);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, lightTextures[1].id);
+        shader->setInt(lightTextures[1].type.c_str(), 5);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, lightTextures[2].id);
+        shader->setInt(lightTextures[2].type.c_str(), 6);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, lightTextures[3].id);
+        shader->setInt(lightTextures[3].type.c_str(), 7);
+    }
+
     if (glm::length(color.ambient) == 0 && glm::length(color.diffuse) == 0 && glm::length(color.specular) == 0) {
-        shader->setVec3("mat.ambient", glm::vec3(0.0f, 0.0f, 0.0f));
-        shader->setVec3("mat.diffuse", glm::vec3(0.0f, 0.0f, 0.0f));
-        shader->setVec3("mat.specular", glm::vec3(0.0f, 0.0f, 0.0f));
+        shader->setVec3("material.ambient", glm::vec3(0.0f));
+        shader->setVec3("material.diffuse", glm::vec3(0.0f));
+        shader->setVec3("material.specular", glm::vec3(0.0f));
     }
     else {
-        shader->setVec3("mat.ambient", color.ambient);
-        shader->setVec3("mat.diffuse", color.diffuse);
-        shader->setVec3("mat.specular", color.specular);
+        shader->setVec3("material.ambient", color.ambient);
+        shader->setVec3("material.diffuse", color.diffuse);
+        shader->setVec3("material.specular", color.specular);
     }
 
     // draw mesh
@@ -54,6 +70,13 @@ void Mesh::Draw(Shader* shader) {
 
     // always good practice to set everything back to defaults once configured.
     glActiveTexture(GL_TEXTURE0);
+}
+
+void Mesh::AddLightTexture(string textureName, GLuint textureID) {
+    Texture texture;
+    texture.id = textureID;
+    texture.type = textureName;
+    lightTextures.emplace_back(texture);
 }
 
 void Mesh::SetupMesh() {
