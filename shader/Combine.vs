@@ -16,6 +16,7 @@ uniform mat4 viewMat;
 uniform mat4 projectionMat;
 uniform mat4 lightSpaceMat;
 
+
 void main()
 {
     vs_out.fragPos = vec3(modelMat * vec4(aPos, 1.0));

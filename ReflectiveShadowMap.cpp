@@ -5,6 +5,8 @@
 bool gFirstMouseInput = true;
 double gLastX = WINDOW_WIDTH / 2;
 double gLastY = WINDOW_HEIGHT / 2;
+float gNear = 0.01f;
+float gFar = 100.0f;
 
 static GLFWwindow* gpWindow;
 static Camera* gpMainCamera;
@@ -176,6 +178,9 @@ void ReflectiveShadowMap::RenderLoop() {
 		// Get light position view information
 		RenderLightView();
 
+		// Store light information to model
+		StoreLightInfo();
+
 		// CombinePass
 		RenderCameraView();
 
@@ -202,7 +207,7 @@ void ReflectiveShadowMap::RenderLightView() {
 	mpLightShader->use();
 
 	// Set transform matrix
-	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, gNear, gFar);
 	glm::vec3 viewDir = mLucyPosition - mLightPosition;
 	glm::mat4 view = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
 	mpLightShader->setMat4("projectionMat", projection);
@@ -223,6 +228,9 @@ void ReflectiveShadowMap::RenderLightView() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+}
+
+void ReflectiveShadowMap::StoreLightInfo() {
 	// Add light information texture to model
 	mpModel->AddLightTexture("worldPoseTexture", mWorldPoseTexture);
 	mpModel->AddLightTexture("normalMapTexture", mNormalMapTexture);
@@ -289,6 +297,8 @@ void ReflectiveShadowMap::RenderQuad() {
 	mpQuadShader->setInt("debugColorTexture", 4);
 
 	mpQuadShader->setInt("debugSwitchTexture", mDebugSwitcher);
+	mpQuadShader->setFloat("nearPlane", gNear);
+	mpQuadShader->setFloat("farPlane", gFar);
 
 	mpQuad->Draw(mpQuadShader.get());
 

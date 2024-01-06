@@ -14,6 +14,16 @@ uniform sampler2D depthMapTexture;
 uniform sampler2D debugColorTexture;
 uniform int debugSwitchTexture;
 
+uniform float nearPlane;
+uniform float farPlane;
+
+
+float LinearizeDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0; // Back to NDC 
+    return (2.0 * nearPlane * farPlane) / (farPlane + nearPlane - z * (farPlane - nearPlane));
+}
+
 void main()
 {
     if (debugSwitchTexture == 1) {
@@ -26,7 +36,8 @@ void main()
         FragColor = texture(fluxMapTexture, vs_out.texCoords);
     }
     else if (debugSwitchTexture == 4) {
-        FragColor = vec4(vec3(1.0f - texture(depthMapTexture, vs_out.texCoords).r), 1.0f);
+        float depthValue = texture(depthMapTexture, vs_out.texCoords).r;
+        FragColor = vec4(vec3(LinearizeDepth(depthValue) / farPlane), 1.0);
     }
     else {
         FragColor = texture(debugColorTexture, vs_out.texCoords);

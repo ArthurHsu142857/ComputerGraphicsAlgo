@@ -26,6 +26,7 @@ private:
 	void CreateRenderBuffers();
 	void RenderLoop() override;
 	void RenderLightView();
+	void StoreLightInfo();
 	void RenderCameraView();
 	void RenderQuad();
 
@@ -48,11 +49,11 @@ private:
 	GLuint mNormalMapTexture;
 	GLuint mFluxMapTexture;
 
-	glm::vec3 mMainCameraPosition = glm::vec3(0.0f, 0.2f, 0.0f);
-	glm::vec3 mLucyPosition = glm::vec3(0.0f, 0.0f, -3.5f);
-	glm::vec3 mLucyScale = glm::vec3(0.02f, 0.02f, 0.02f);
+	glm::vec3 mMainCameraPosition = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 mLucyPosition = glm::vec3(0.0f, 0.0f, -5.0f);
+	glm::vec3 mLucyScale = glm::vec3(0.01f, 0.01f, 0.01f);
 	// Todo : light style class
-	glm::vec3 mLightPosition = glm::vec3(0.0f, 3.0f, 0.0f);
+	glm::vec3 mLightPosition = glm::vec3(0.0f, 5.0f, 0.0f);
 
 	// Debug
 	int mDebugSwitcher = 0;
