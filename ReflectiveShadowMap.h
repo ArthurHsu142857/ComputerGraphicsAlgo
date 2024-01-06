@@ -49,11 +49,15 @@ private:
 	GLuint mNormalMapTexture;
 	GLuint mFluxMapTexture;
 
+	static constexpr float smNear = 0.1f;
+	static constexpr float smFar = 100.0f;
 	glm::vec3 mMainCameraPosition = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 mLucyPosition = glm::vec3(0.0f, 0.0f, -5.0f);
+	glm::vec3 mLucyPosition = glm::vec3(0.0f, 0.0f, -7.0f);
 	glm::vec3 mLucyScale = glm::vec3(0.01f, 0.01f, 0.01f);
 	// Todo : light style class
-	glm::vec3 mLightPosition = glm::vec3(0.0f, 5.0f, 0.0f);
+	glm::vec3 mLightPosition = glm::vec3(0.0f, 7.0f, 0.0f);
+	glm::mat4 mLucyTramsformMatrix;
+	glm::mat4 mProjectionMatrix;
 
 	// Debug
 	int mDebugSwitcher = 0;

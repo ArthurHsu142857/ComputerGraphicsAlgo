@@ -12,8 +12,7 @@ out VS_OUT {
 } vs_out;
 
 uniform mat4 modelMat;
-uniform mat4 viewMat;
-uniform mat4 projectionMat;
+uniform mat4 mvpMat;
 uniform mat4 lightSpaceMat;
 
 
@@ -24,5 +23,5 @@ void main()
     vs_out.normal = transpose(inverse(mat3(modelMat))) * aNormal;
     vs_out.fragPosLightSpace = lightSpaceMat * vec4(vs_out.fragPos, 1.0);
 
-    gl_Position = projectionMat * viewMat * modelMat * vec4(aPos, 1.0);
+    gl_Position = mvpMat * vec4(aPos, 1.0);
 }

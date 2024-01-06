@@ -5,8 +5,6 @@
 bool gFirstMouseInput = true;
 double gLastX = WINDOW_WIDTH / 2;
 double gLastY = WINDOW_HEIGHT / 2;
-float gNear = 0.01f;
-float gFar = 100.0f;
 
 static GLFWwindow* gpWindow;
 static Camera* gpMainCamera;
@@ -50,6 +48,7 @@ void ReflectiveShadowMap::ProcessKeyboardInput(float deltaTime) {
 	if (glfwGetKey(gpWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(gpWindow, true);
 
+	// Camera position control
 	if (glfwGetKey(gpWindow, GLFW_KEY_W) == GLFW_PRESS)
 		gpMainCamera->ProcessKeyboard(FORWARD, deltaTime);
 	if (glfwGetKey(gpWindow, GLFW_KEY_S) == GLFW_PRESS)
@@ -62,6 +61,20 @@ void ReflectiveShadowMap::ProcessKeyboardInput(float deltaTime) {
 		gpMainCamera->ProcessKeyboard(UP, deltaTime);
 	if (glfwGetKey(gpWindow, GLFW_KEY_E) == GLFW_PRESS)
 		gpMainCamera->ProcessKeyboard(DOWN, deltaTime);
+
+	// Light position control
+	if (glfwGetKey(gpWindow, GLFW_KEY_I) == GLFW_PRESS)
+		mLightPosition += glm::vec3(0.0f, 0.0f, -0.1f);
+	if (glfwGetKey(gpWindow, GLFW_KEY_K) == GLFW_PRESS)
+		mLightPosition += glm::vec3(0.0f, 0.0f, 0.1f);
+	if (glfwGetKey(gpWindow, GLFW_KEY_J) == GLFW_PRESS)
+		mLightPosition += glm::vec3(-0.1f, 0.0f, 0.0f);
+	if (glfwGetKey(gpWindow, GLFW_KEY_L) == GLFW_PRESS)
+		mLightPosition += glm::vec3(0.1f, 0.0f, 0.0f);
+	if (glfwGetKey(gpWindow, GLFW_KEY_U) == GLFW_PRESS)
+		mLightPosition += glm::vec3(0.0f, 0.1f, 0.0f);
+	if (glfwGetKey(gpWindow, GLFW_KEY_O) == GLFW_PRESS)
+		mLightPosition += glm::vec3(0.0f, -0.1f, 0.0f);
 
 	// Debug switcher
 	if (glfwGetKey(gpWindow, GLFW_KEY_1) == GLFW_PRESS)
@@ -89,6 +102,12 @@ void ReflectiveShadowMap::SetupResource() {
 		glm::vec3(1.0f, 1.0f, 1.0f)
 	);
 
+	mLucyTramsformMatrix = glm::mat4(1.0f);
+	mLucyTramsformMatrix = glm::translate(mLucyTramsformMatrix, mLucyPosition);
+	mLucyTramsformMatrix = glm::scale(mLucyTramsformMatrix, mLucyScale);
+
+	mProjectionMatrix = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, smNear, smFar);
+
 	CreateRenderBuffers();
 }
 
@@ -106,6 +125,8 @@ void ReflectiveShadowMap::FreeResource() {
 }
 
 void ReflectiveShadowMap::CreateRenderBuffers() {
+	float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+
 	glGenFramebuffers(1, &mReflectiveShadowMapFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, mReflectiveShadowMapFBO);
 	
@@ -115,6 +136,9 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mWorldPoseTexture, 0);
 
 	// Normal map texture
@@ -123,6 +147,9 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, mNormalMapTexture, 0);
 
 	// Flux map texture
@@ -131,6 +158,9 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, mFluxMapTexture, 0);
 
 	// Todo : use render buffer object ?
@@ -140,6 +170,9 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mDepthMapTexture, 0);
 	
 	// Debug color texture
@@ -207,15 +240,10 @@ void ReflectiveShadowMap::RenderLightView() {
 	mpLightShader->use();
 
 	// Set transform matrix
-	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, gNear, gFar);
 	glm::vec3 viewDir = mLucyPosition - mLightPosition;
-	glm::mat4 view = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
-	mpLightShader->setMat4("projectionMat", projection);
-	mpLightShader->setMat4("viewMat", view);
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, mLucyPosition);
-	model = glm::scale(model, mLucyScale);
-	mpLightShader->setMat4("modelMat", model);
+	glm::mat4 lightViewMatrix = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
+	mpLightShader->setMat4("modelMat", mLucyTramsformMatrix);
+	mpLightShader->setMat4("mvpMat", mProjectionMatrix * lightViewMatrix * mLucyTramsformMatrix);
 
 	// Set light information
 	mpLightShader->setVec3("light.position", mpLight->position);
@@ -250,15 +278,13 @@ void ReflectiveShadowMap::RenderCameraView() {
 	mpCombineShader->use();
 
 	// Set transform matrix
-	glm::mat4 projection = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
-	glm::mat4 view = gpMainCamera->GetViewMatrix();
-	mpCombineShader->setMat4("projectionMat", projection);
-	mpCombineShader->setMat4("viewMat", view);
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, mLucyPosition);
-	model = glm::scale(model, mLucyScale);
-	mpCombineShader->setMat4("modelMat", model);
-	mpCombineShader->setMat4("lightSpaceMat", projection * view);
+	glm::vec3 viewDir = mLucyPosition - mLightPosition;
+	glm::mat4 lightViewMatrix = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 cameraViewMatrix = gpMainCamera->GetViewMatrix();
+	glm::mat4 mvpMatrix = mProjectionMatrix * cameraViewMatrix * mLucyTramsformMatrix;
+	mpCombineShader->setMat4("modelMat", mLucyTramsformMatrix);
+	mpCombineShader->setMat4("mvpMat", mvpMatrix);
+	mpCombineShader->setMat4("lightSpaceMat", mProjectionMatrix * lightViewMatrix);
 
 	// Set light information
 	mpCombineShader->setVec3("light.position", mpLight->position);
@@ -297,8 +323,8 @@ void ReflectiveShadowMap::RenderQuad() {
 	mpQuadShader->setInt("debugColorTexture", 4);
 
 	mpQuadShader->setInt("debugSwitchTexture", mDebugSwitcher);
-	mpQuadShader->setFloat("nearPlane", gNear);
-	mpQuadShader->setFloat("farPlane", gFar);
+	mpQuadShader->setFloat("nearPlane", smNear);
+	mpQuadShader->setFloat("farPlane", smFar);
 
 	mpQuad->Draw(mpQuadShader.get());
 

@@ -29,13 +29,28 @@ uniform sampler2D normalMapTexture;
 uniform sampler2D fluxMapTexture;
 uniform sampler2D depthMapTexture;
 
+float depthBias = 0.0005;
+
+
+bool LightSpaceOcclusion(vec3 normal, vec3 lightDir, vec4 fragPosLightSpace)
+{
+    vec3 projectCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projectCoords = projectCoords * 0.5 + 0.5;
+
+    float closestDepth = texture(depthMapTexture, projectCoords.xy).r;
+    float currentDepth = projectCoords.z;
+
+    return (currentDepth - depthBias) > closestDepth;
+}
 
 void main()
 {
-    vec3 norm = normalize(vs_out.normal);
+    vec3 normal = normalize(vs_out.normal);
     vec3 lightDir = normalize(light.position - vs_out.fragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = light.color * (diff * material.diffuse);
+
+    bool isShadow = LightSpaceOcclusion(normal, lightDir, vs_out.fragPosLightSpace);
     
-    FragColor = vec4(diffuse, 1.0f);
+    FragColor = vec4(isShadow ? vec3(0.0, 0.0, 0.0) : diffuse, 1.0f);
 }
