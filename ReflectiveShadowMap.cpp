@@ -102,10 +102,6 @@ void ReflectiveShadowMap::SetupResource() {
 		glm::vec3(1.0f, 1.0f, 1.0f)
 	);
 
-	mLucyTramsformMatrix = glm::mat4(1.0f);
-	mLucyTramsformMatrix = glm::translate(mLucyTramsformMatrix, mLucyPosition);
-	mLucyTramsformMatrix = glm::scale(mLucyTramsformMatrix, mLucyScale);
-
 	mProjectionMatrix = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, smNear, smFar);
 
 	CreateRenderBuffers();
@@ -240,7 +236,10 @@ void ReflectiveShadowMap::RenderLightView() {
 	mpLightShader->use();
 
 	// Set transform matrix
-	glm::vec3 viewDir = mLucyPosition - mLightPosition;
+	mLucyTramsformMatrix = glm::mat4(1.0f);
+	mLucyTramsformMatrix = glm::translate(mLucyTramsformMatrix, mLucyPosition);
+	mLucyTramsformMatrix = glm::scale(mLucyTramsformMatrix, mLucyScale);
+	glm::vec3 viewDir = mLucyPosition - mLightPosition + glm::vec3(0.0f, 7.0f, 0.0f);		// Add a shift to middle of model
 	glm::mat4 lightViewMatrix = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
 	mpLightShader->setMat4("modelMat", mLucyTramsformMatrix);
 	mpLightShader->setMat4("mvpMat", mProjectionMatrix * lightViewMatrix * mLucyTramsformMatrix);
@@ -278,7 +277,7 @@ void ReflectiveShadowMap::RenderCameraView() {
 	mpCombineShader->use();
 
 	// Set transform matrix
-	glm::vec3 viewDir = mLucyPosition - mLightPosition;
+	glm::vec3 viewDir = mLucyPosition - mLightPosition + glm::vec3(0.0f, 7.0f, 0.0f);		// Add a shift to middle of model
 	glm::mat4 lightViewMatrix = glm::lookAt(mLightPosition, mLightPosition + viewDir, glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 cameraViewMatrix = gpMainCamera->GetViewMatrix();
 	glm::mat4 mvpMatrix = mProjectionMatrix * cameraViewMatrix * mLucyTramsformMatrix;

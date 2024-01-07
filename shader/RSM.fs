@@ -37,6 +37,6 @@ void main()
     outWorldPose = vs_out.fragPos;
     outNormal = normal;
     // Point light has cosine weight decrease, parallel light don't
-    outFlux = vec3(max(dot(normal, lightDir), 0.0f)); // * material flux
+    outFlux = vec3(max(dot(normal, lightDir), 0.0f)) * diffuse;
     outColor = diffuse;
 }
