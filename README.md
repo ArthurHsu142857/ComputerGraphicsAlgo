@@ -1,6 +1,9 @@
 ## Overview
 Implementation of some basic Computer Graphics algorithm by OpenGL.
 
+<img src="https://github.com/ArthurHsu142857/ComputerGraphicsAlgo/assets/43297470/1206033c-f277-4447-95fc-e77e65588875" alt="GI" width="400"/>
+<img src="https://github.com/ArthurHsu142857/ComputerGraphicsAlgo/assets/43297470/0ab8c9e3-0ca9-4944-8d37-b2cb96c5fa36" alt="FinalColor" width="400"/>
+
 ## Build
 Use [vcpkg](https://github.com/microsoft/vcpkg) to get we need.
 
