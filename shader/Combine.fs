@@ -23,15 +23,16 @@ in VS_OUT {
 uniform sampler2D texture_diffuse1;
 uniform Light light;
 uniform Material material;
+uniform float randomNumbers[400];
 
 uniform sampler2D worldPoseTexture;
 uniform sampler2D normalMapTexture;
 uniform sampler2D fluxMapTexture;
 uniform sampler2D depthMapTexture;
 
-float depthBias = 0.0005;
-int sampleRange = 15;
-float sampleWeight = 1.0 / pow((sampleRange * 2.0 + 1.0), 2);
+float depthBias = 0.005f;
+float sampleRadius = 1.0f;
+float PI_2 = 6.283185;
 
 bool LightSpaceOcclusion(vec3 normal, vec3 lightDir, vec3 projectCoords)
 {
@@ -41,30 +42,35 @@ bool LightSpaceOcclusion(vec3 normal, vec3 lightDir, vec3 projectCoords)
     return (currentDepth - depthBias) > closestDepth;
 }
 
-vec3 GlobalLightingEstimate(vec3 currentPointNormal, vec3 currentPointWorldPose, vec3 projectCoords)
+vec3 IndirectLightingEstimate(vec3 currentPointNormal, vec3 currentPointWorldPose, vec3 projectCoords)
 {
     vec2 texelSize = 1.0 / textureSize(worldPoseTexture, 0);
     vec3 globalIllumination = vec3(0.0, 0.0, 0.0);
 
-    // Sample in 31 x 31 mask light space
-    for (int i = -sampleRange; i <= sampleRange; i++) {
-        for (int j = -sampleRange; j <= sampleRange; j++) {
-            vec2 coords = projectCoords.xy + vec2(i, j) * texelSize;
+    for (int i = 0; i < 400; i += 2)
+    {
+        vec2 coords = vec2(
+            projectCoords.x + sampleRadius * randomNumbers[i] * sin(PI_2 * randomNumbers[i + 1]),
+            projectCoords.y + sampleRadius * randomNumbers[i] * cos(PI_2 * randomNumbers[i + 1])
+        );
 
-            vec3 samplePointWorldPose = texture(worldPoseTexture, coords).rgb;
-            vec3 samplePointNormal = texture(normalMapTexture, coords).rgb;
-            vec3 samplePointFlux = texture(fluxMapTexture, coords).rgb;
+        vec3 samplePointWorldPose = texture(worldPoseTexture, coords).rgb;
+        vec3 samplePointNormal = normalize(texture(normalMapTexture, coords).rgb);
+        vec3 samplePointFlux = texture(fluxMapTexture, coords).rgb;
 
-            vec3 samplePointToCurrentPoint = currentPointWorldPose - samplePointWorldPose;
-            float distance = length(samplePointToCurrentPoint);
-            samplePointToCurrentPoint = normalize(samplePointToCurrentPoint);
-            globalIllumination += (
-                samplePointFlux * 
-                max(0.0, dot(samplePointNormal, samplePointToCurrentPoint)) *
-                max(0.0, dot(currentPointNormal, -samplePointToCurrentPoint)) *
-                sampleWeight
-            );
-        }
+        vec3 samplePointToCurrentPoint = currentPointWorldPose - samplePointWorldPose;
+        float distance = length(samplePointToCurrentPoint);
+
+        if (distance < 4.0f)
+            continue;
+
+        samplePointToCurrentPoint = normalize(samplePointToCurrentPoint);
+        globalIllumination += (
+            samplePointFlux
+            * max(0.0, dot(samplePointNormal, samplePointToCurrentPoint))
+            * max(0.0, dot(currentPointNormal, -samplePointToCurrentPoint))
+            / pow(distance, 4)
+        );
     }
 
     return globalIllumination;
@@ -77,11 +83,13 @@ void main()
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = light.color * (diff * material.diffuse);
 
+    // Shadow mapping
     vec3 projectCoords = vs_out.fragPosLightSpace.xyz / vs_out.fragPosLightSpace.w;
     projectCoords = projectCoords * 0.5 + 0.5;
     bool isShadow = LightSpaceOcclusion(normal, lightDir, projectCoords);
 
-    vec3 GI = GlobalLightingEstimate(normal, vs_out.fragPos, projectCoords);
+    // Reflective shadow map
+    vec3 GI = IndirectLightingEstimate(normal, vs_out.fragPos, projectCoords);
     
-    FragColor = vec4(GI + (isShadow ? vec3(0.0, 0.0, 0.0) : diffuse), 1.0f);
+    FragColor = vec4(GI * 10 + (isShadow ? vec3(0.0, 0.0, 0.0) : diffuse), 1.0f);
 }

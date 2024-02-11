@@ -105,6 +105,8 @@ void ReflectiveShadowMap::SetupResource() {
 	mProjectionMatrix = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, smNear, smFar);
 
 	CreateRenderBuffers();
+
+	GenerateRandomNumbers();
 }
 
 void ReflectiveShadowMap::FreeResource() {
@@ -189,6 +191,19 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void ReflectiveShadowMap::GenerateRandomNumbers()
+{
+	std::random_device rd;
+	std::default_random_engine generator(rd());
+
+	std::uniform_real_distribution<float> unif(0.0, 1.0);
+
+	for (int i = 0; i < smSampleNumber * 2; i++)
+	{
+		mRandomNumbers[i] = unif(generator);
+	}
+}
+
 void ReflectiveShadowMap::RenderLoop() {
 	glEnable(GL_CULL_FACE);
 
@@ -208,7 +223,7 @@ void ReflectiveShadowMap::RenderLoop() {
 		RenderLightView();
 
 		// Store light information to model
-		StoreLightInfo();
+		PrepareLightingResource();
 
 		// CombinePass
 		RenderCameraView();
@@ -254,10 +269,9 @@ void ReflectiveShadowMap::RenderLightView() {
 	glActiveTexture(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 }
 
-void ReflectiveShadowMap::StoreLightInfo() {
+void ReflectiveShadowMap::PrepareLightingResource() {
 	// Add light information texture to model
 	mpModel->AddLightTexture("worldPoseTexture", mWorldPoseTexture);
 	mpModel->AddLightTexture("normalMapTexture", mNormalMapTexture);
@@ -288,6 +302,9 @@ void ReflectiveShadowMap::RenderCameraView() {
 	// Set light information
 	mpCombineShader->setVec3("light.position", mpLight->position);
 	mpCombineShader->setVec3("light.color", mpLight->color);
+
+	// Set random sample coordinates
+	mpCombineShader->setFloatArray("randomNumbers", smSampleNumber * 2, mRandomNumbers);
 
 	// Render
 	mpModel->Draw(mpCombineShader.get());
