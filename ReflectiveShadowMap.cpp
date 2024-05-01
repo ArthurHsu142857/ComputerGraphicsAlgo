@@ -2,16 +2,11 @@
 
 #include <iostream>
 
-bool gFirstMouseInput = true;
-double gLastX = WINDOW_WIDTH / 2;
-double gLastY = WINDOW_HEIGHT / 2;
 
-static GLFWwindow* gpWindow;
 static Camera* gpMainCamera;
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
-void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
-
+static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
+static void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn);
 
 ReflectiveShadowMap::ReflectiveShadowMap(const char* objPath) {
 	mpFilePath = objPath;
@@ -26,12 +21,13 @@ void ReflectiveShadowMap::SetupGL() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	gpWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Reflective shadow map", NULL, NULL);
+	gpWindow = glfwCreateWindow(this->mWindowWidth, this->mWindowHeight, "Computer graphics algorithm", NULL, NULL);
 	if (gpWindow == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return;
 	}
+
 	glfwMakeContextCurrent(gpWindow);
 	glfwSetFramebufferSizeCallback(gpWindow, FramebufferSizeCallback);
 	glfwSetCursorPosCallback(gpWindow, MouseCallback);
@@ -102,7 +98,7 @@ void ReflectiveShadowMap::SetupResource() {
 		glm::vec3(1.0f, 1.0f, 1.0f)
 	);
 
-	mProjectionMatrix = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, smNear, smFar);
+	mProjectionMatrix = glm::perspective(glm::radians(gpMainCamera->Zoom), (float)mWindowWidth / (float)mWindowHeight, smNear, smFar);
 
 	CreateRenderBuffers();
 
@@ -120,6 +116,8 @@ void ReflectiveShadowMap::FreeResource() {
 	glDeleteTextures(1, &mDebugColorTexture);
 	
 	glDeleteFramebuffers(1, &mReflectiveShadowMapFBO);
+
+	mpFilePath = nullptr;
 }
 
 void ReflectiveShadowMap::CreateRenderBuffers() {
@@ -131,7 +129,7 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	// World position texture
 	glGenTextures(1, &mWorldPoseTexture);
 	glBindTexture(GL_TEXTURE_2D, mWorldPoseTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, mWindowWidth, mWindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -142,7 +140,7 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	// Normal map texture
 	glGenTextures(1, &mNormalMapTexture);
 	glBindTexture(GL_TEXTURE_2D, mNormalMapTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, mWindowWidth, mWindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -153,7 +151,7 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	// Flux map texture
 	glGenTextures(1, &mFluxMapTexture);
 	glBindTexture(GL_TEXTURE_2D, mFluxMapTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, mWindowWidth, mWindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -165,7 +163,7 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	// Depth map texture
 	glGenTextures(1, &mDepthMapTexture);
 	glBindTexture(GL_TEXTURE_2D, mDepthMapTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, mWindowWidth, mWindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -176,7 +174,7 @@ void ReflectiveShadowMap::CreateRenderBuffers() {
 	// Debug color texture
 	glGenTextures(1, &mDebugColorTexture);
 	glBindTexture(GL_TEXTURE_2D, mDebugColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, mWindowWidth, mWindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, mDebugColorTexture, 0);
@@ -207,7 +205,7 @@ void ReflectiveShadowMap::GenerateRandomNumbers()
 void ReflectiveShadowMap::RenderLoop() {
 	glEnable(GL_CULL_FACE);
 
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, mWindowWidth, mWindowHeight);
 
 	float deltaTime = 0.0f;
 	float lastFrameTime = 0.0f;
@@ -239,7 +237,7 @@ void ReflectiveShadowMap::RenderLoop() {
 }
 
 void ReflectiveShadowMap::RenderLightView() {
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, mWindowWidth, mWindowHeight);
 
 	// Render to texture
 	glBindFramebuffer(GL_FRAMEBUFFER, mReflectiveShadowMapFBO);
@@ -280,7 +278,7 @@ void ReflectiveShadowMap::PrepareLightingResource() {
 }
 
 void ReflectiveShadowMap::RenderCameraView() {
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, mWindowWidth, mWindowHeight);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -348,15 +346,18 @@ void ReflectiveShadowMap::RenderQuad() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
+void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+{
 	glViewport(0, 0, width, height);
 }
 
-void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn) {
+void MouseCallback(GLFWwindow* window, double xPosIn, double yPosIn)
+{
 	float xPos = static_cast<float>(xPosIn);
 	float yPos = static_cast<float>(yPosIn);
 
-	if (gFirstMouseInput) {
+	if (gFirstMouseInput)
+	{
 		gLastX = xPos;
 		gLastY = yPos;
 		gFirstMouseInput = false;

@@ -10,16 +10,18 @@ Mesh::Mesh(vector<Vertex> vertices, Color color, vector<unsigned int> indices, v
 }
 
 void Mesh::Draw(Shader* shader) {
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
-    unsigned int normalNr = 1;
-    unsigned int heightNr = 1;
+    unsigned int diffuseNr = 0;
+    unsigned int specularNr = 0;
+    unsigned int normalNr = 0;
+    unsigned int heightNr = 0;
+    unsigned int cubemapNr = 0;
 
     for (unsigned int i = 0; i < textures.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
         // retrieve texture number (the N in diffuse_textureN)
         string number;
         string name = textures[i].type;
+        bool isCubemap = false;
         if (name == "texture_diffuse")
             number = std::to_string(diffuseNr++);
         else if (name == "texture_specular")
@@ -28,12 +30,20 @@ void Mesh::Draw(Shader* shader) {
             number = std::to_string(normalNr++); // transfer unsigned int to string
         else if (name == "texture_height")
             number = std::to_string(heightNr++); // transfer unsigned int to string
-
+        else if (name == "texture_cubemap") {
+            number = std::to_string(cubemapNr++); // transfer unsigned int to string
+            isCubemap = true;
+        }
         // now set the sampler to the correct texture unit
         shader->setInt((name + number).c_str(), i);
 
         // and finally bind the texture
-        glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        if (isCubemap) {
+            glBindTexture(GL_TEXTURE_CUBE_MAP, textures[i].id);
+        }
+        else {
+            glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        }
     }
 
     // Active light textures

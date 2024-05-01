@@ -1,11 +1,8 @@
 #pragma once
 #include "Application.h"
 
-// include GLAD before GLFW
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include <random>
+
 
 class ReflectiveShadowMap : public Application {
 	// Todo : light style class ...
