@@ -3,58 +3,57 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "Utility.h"
-#include "Shader.h"
-
 #include <string>
 #include <vector>
+
+#include "Shader.h"
+#include "Utility.h"
 using namespace std;
 
 #define MAX_BONE_INFLUENCE 4
 
 struct Vertex {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 texCoords;
+  glm::vec3 position;
+  glm::vec3 normal;
+  glm::vec2 texCoords;
 
-    glm::vec3 tangent;
-    glm::vec3 bitangent;
-    //bone indexes which will influence this vertex
-    int mBoneIDs[MAX_BONE_INFLUENCE];
-    //weights from each bone
-    float mWeights[MAX_BONE_INFLUENCE];
+  glm::vec3 tangent;
+  glm::vec3 bitangent;
+  // bone indexes which will influence this vertex
+  int mBoneIDs[MAX_BONE_INFLUENCE];
+  // weights from each bone
+  float mWeights[MAX_BONE_INFLUENCE];
 };
 
 struct Texture {
-    unsigned int id;
-    string type;
-    string path;
+  unsigned int id;
+  string type;
+  string path;
 };
 
 struct Color {
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
 };
 
 class Mesh {
-public:
-    Mesh(vector<Vertex> vertices, Color materials, vector<unsigned int> indices, vector<Texture> textures);
-    void Draw(Shader* shader);
-    void AddLightTexture(string textureName, GLuint textureID);
+ public:
+  Mesh(vector<Vertex> vertices, Color materials, vector<unsigned int> indices,
+       vector<Texture> textures);
+  void Draw(Shader* shader);
+  void AddLightTexture(string textureName, GLuint textureID);
 
-    vector<Vertex>       vertices;
-    Color                color;
-    vector<unsigned int> indices;
-    vector<Texture>      textures;
-    vector<Texture>      lightTextures;
+  vector<Vertex> vertices;
+  Color color;
+  vector<unsigned int> indices;
+  vector<Texture> textures;
+  vector<Texture> lightTextures;
 
-    unsigned int VAO;
+  unsigned int VAO;
 
-private:
-    void SetupMesh();
+ private:
+  void SetupMesh();
 
-    unsigned int VBO, EBO;
+  unsigned int VBO, EBO;
 };
-
